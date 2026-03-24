@@ -4,26 +4,14 @@ import pandas as pd
 
 # Cargar todos los modelos
 modelos = {
-    "Decision Tree": load("Decision Tree_pipeline.joblib"),
-    "Gradient Boosting": load("Gradient Boosting_pipeline.joblib"),
-    "Linear Regression": load("Linear Regression_pipeline.joblib"),
-    "Random Forest": load("Random Forest_pipeline.joblib")
+    "Logistic Regression": load("Logistic Regression_pipeline_clasificacion.joblib"),
+    "Decision Tree": load("Decision Tree_pipeline_clasificacion.joblib"),
+    "Random Forest": load("Random Forest_pipeline_clasificacion.joblib"),
+    "Gradient Boosting": load("Gradient Boosting_pipeline_clasificacion.joblib"),
+    "SVM": load("SVM_pipeline_clasificacion.joblib"),
 }
 
-st.title("Prediccion del tiempo y calidad de sueño")
-
-# Inputs del usuario
-# genero = st.selectbox("Género", ["Masculino", "Femenino"])
-# edad = st.number_input("Edad", min_value=0, max_value=120, value=30)
-# ocupacion = st.selectbox("Ocupación", ["Ingeniero de software", "Doctor", "Asesor de ventas", "Maestro", "Enfermera", "Ingeniero(a)", "Contador(a)", "Científico", "Abogado", "Vendedora", "Gerente"])
-
-# actividad = st.number_input("Tiempo de actividad física diaria (0 - 90 min)", min_value=0, max_value=90, value=30)
-# estres = st.number_input("Nivel de estrés (0 - 8)", min_value=0, max_value=8, value=3) 
-# imc = st.selectbox("Categoría de IMC", ["Normal", "Sobrepeso", "Obesidad", "Peso Normal"])
-# presion = st.text_input("Presión arterial (100-160 / 60-100)", "140/90")
-# fc = st.number_input("Frecuencia cardíaca (60 - 100)", min_value=60, max_value=100, value=75)
-# pasos = st.number_input("Pasos diarios (3K - 10K)", min_value=3000, max_value=10000, value=3000)
-# trastorno = st.selectbox("Trastorno del sueño", ["Ninguno", "Apnea del sueño", "Insomnio"])
+st.title("Prediccion transtorno de sueño")
 
 # 1. Definimos la función de reinicio
 def reset_values():
@@ -31,6 +19,10 @@ def reset_values():
     st.session_state["genero"] = "Masculino"
     st.session_state["edad"] = 30
     st.session_state["ocupacion"] = "Ingeniero de software"
+
+    st.session_state["du_suenio"] = 8.0
+    st.session_state["ca_suenio"] = 5
+
     st.session_state["actividad"] = 30
     st.session_state["estres"] = 3
     st.session_state["imc"] = "Normal"
@@ -39,12 +31,14 @@ def reset_values():
     st.session_state["pasos"] = 3000
     st.session_state["trastorno"] = "Ninguno"
 
-
 # 2. Agregamos el parámetro 'key' a cada widget para vincularlos
 nombre_u = st.text_input("Nombre", "", key="nombre")
 genero = st.selectbox("Género", ["Masculino", "Femenino"], key="genero")
 edad = st.number_input("Edad", min_value=0, max_value=120, value=30, key="edad")
 ocupacion = st.selectbox("Ocupación", ["Ingeniero de software", "Doctor", "Asesor de ventas", "Maestro", "Enfermera", "Ingeniero(a)", "Contador(a)", "Científico", "Abogado", "Vendedora", "Gerente"], key="ocupacion")
+
+dur_suenio = st.number_input("Duración del sueño (0 - 10 Hrs)", min_value=0.0, max_value=10.0, value=8.0, key="du_suenio")
+cal_suenio = st.number_input("Calidad del sueño (0 - 10)", min_value=0, max_value=10, value=5, key="ca_suenio")
 
 actividad = st.number_input("Tiempo de actividad física diaria (0 - 90 min)", min_value=0, max_value=90, value=30, key="actividad")
 estres = st.number_input("Nivel de estrés (0 - 8)", min_value=0, max_value=8, value=3, key="estres") 
@@ -52,7 +46,8 @@ imc = st.selectbox("Categoría de IMC", ["Normal", "Sobrepeso", "Obesidad", "Pes
 presion = st.text_input("Presión arterial (100-160 / 60-100)", "140/90", key="presion")
 fc = st.number_input("Frecuencia cardíaca (60 - 100)", min_value=60, max_value=100, value=75, key="fc")
 pasos = st.number_input("Pasos diarios (3K - 10K)", min_value=3000, max_value=10000, value=3000, key="pasos")
-trastorno = st.selectbox("Trastorno del sueño", ["Ninguno", "Apnea del sueño", "Insomnio"], key="trastorno")
+# trastorno = st.selectbox("Trastorno del sueño", ["Ninguno", "Apnea del sueño", "Insomnio"], key="trastorno")
+
 
 
 # Crear lista de resultados
@@ -66,36 +61,33 @@ if st.button("Predecir con todos los modelos"):
         "Género": [genero],
         "Edad": [edad],
         "Ocupación": [ocupacion],
+
+        "Duración del sueño": [dur_suenio],
+        "Calidad del sueño": [cal_suenio],
+
         "Nivel de actividad física": [actividad],
         "Nivel de estrés": [estres],
         "Categoría de IMC": [imc],
         "Presión arterial": [presion],
         "Frecuencia cardíaca": [fc],
-        "Pasos diarios": [pasos],
-        "Trastorno del sueño": [trastorno]
+        "Pasos diarios": [pasos]
+        # "Trastorno del sueño": [trastorno]
     })
 
     # Procesar cada modelo y mostrar resultados
     st.subheader("Resultados de la predicción")
     st.write(f"Hola {nombre_u}, estas son tus predicciones:")
 
-    # for nombre, modelo in modelos.items():
-    #     pred = modelo.predict(input_data)
-    #     st.write(f"**{nombre}**")
-    #     st.write(f"- Duración del sueño estimada: {pred[0][0]:.2f} horas")
-    #     st.write(f"- Calidad del sueño estimada: {pred[0][1]:.2f}")
-    #     st.write("---")
-    
     for nombre, modelo in modelos.items():
         pred = modelo.predict(input_data)
         resultados.append({
             "Modelo": nombre,
-            "Duración del sueño (hrs)": f"{pred[0][0]:.2f}",
-            "Calidad del sueño": f"{pred[0][1]:.2f}"
+            "Trastorno del sueño": f"{pred[0]}" # pred[0]
         })
 
     # Convertir a DataFrame
 df_resultados = pd.DataFrame(resultados)
+
 
 # Generar tabla HTML con estilo
 tabla_html = df_resultados.to_html(index=False, classes="styled-table")
@@ -143,5 +135,4 @@ if st.button("Resetear valores"):
     st.session_state.clear()
     # st.experimental_rerun()
     reset_values()
-    
     
